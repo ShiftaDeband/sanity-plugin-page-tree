@@ -3,12 +3,12 @@ import { defineField, defineType, DocumentDefinition } from 'sanity';
 
 import { PageTreeField } from '../components/PageTreeField';
 import { SlugField } from '../components/SlugField';
-import { GlobalOptions, PageTreeConfig } from '../types';
+import { PageTreeConfig, PageTypeOptions } from '../types';
 import { toArray } from '../utils/array-utils';
 import { parentValidator } from '../validators/parent-validator';
 import { slugValidator } from '../validators/slug-validator';
 
-type Options = GlobalOptions & {
+type Options = PageTypeOptions & {
   isRoot?: boolean;
 };
 
@@ -24,7 +24,7 @@ export const definePageType = (
   config: PageTreeConfig,
   options: Options = { isRoot: false },
 ) => {
-  const optionsConfig = { ...config.globalOptions, ...options };
+  const optionsConfig = { ...config.pageTypeOptions, ...options };
   const slugSourceFieldName = getSlugSourceField(config, optionsConfig);
 
   let slugSourceField;

@@ -39,7 +39,7 @@ export type NestedPageTreeItem = PageTreeItem & {
   children: NestedPageTreeItem[];
 };
 
-export type GlobalOptions = {
+export type PageTypeOptions = {
   fieldsGroupName?: string;
   slugSource?: SlugOptions['source'];
   slugValidationRules?: ValidationBuilder<SlugRule, SlugValue>;
@@ -55,7 +55,7 @@ export type PageTreeConfig = {
   rootSchemaType: string;
   /** All your page schema type names, e.g. ["homePage", "contentPage"] */
   pageSchemaTypes: string[];
-  /** @deprecated Use globalOptions.slugSource instead. Field name of your page documents */
+  /** @deprecated Use pageTypeOptions.slugSource instead. Field name of your page documents */
   titleFieldName?: string;
   /** Optionally specify which document types can be the parent of a document type */
   allowedParents?: Record<string, string[]>;
@@ -71,7 +71,7 @@ export type PageTreeConfig = {
     documentLanguageShouldMatchParent?: boolean;
   };
   /** Define options that apply to all pages. Can be overridden by options supplied using definePageType */
-  globalOptions?: GlobalOptions;
+  pageTypeOptions?: PageTypeOptions;
 };
 
 /**
