@@ -4,6 +4,7 @@ import { defineField, defineType, DocumentDefinition } from 'sanity';
 import { PageTreeField } from '../components/PageTreeField';
 import { SlugField } from '../components/SlugField';
 import { GlobalOptions, PageTreeConfig } from '../types';
+import { toArray } from '../utils/array-utils';
 import { parentValidator } from '../validators/parent-validator';
 import { slugValidator } from '../validators/slug-validator';
 
@@ -80,9 +81,3 @@ const basePageFields = (config: PageTreeConfig, options: Options, ownType: Docum
 ];
 
 const getSlugSourceField = (config: PageTreeConfig, options: Options) => config.titleFieldName ?? options.slugSource;
-const toArray = <T>(t: undefined | T | T[]): T[] => {
-  if (t === undefined) {
-    return [];
-  }
-  return Array.isArray(t) ? t : [t];
-};
