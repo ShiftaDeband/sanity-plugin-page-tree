@@ -1,5 +1,5 @@
-import { DocumentListBuilder } from 'sanity/structure';
 import { SlugOptions, SlugRule, SlugValue, ValidationBuilder } from 'sanity';
+import { DocumentListBuilder } from 'sanity/structure';
 
 export type SanityRef = {
   _ref: string;
@@ -42,8 +42,8 @@ export type NestedPageTreeItem = PageTreeItem & {
 export type GlobalOptions = {
   fieldsGroupName?: string;
   slugSource?: SlugOptions['source'];
-  slugValidationRules?: ValidationBuilder<SlugRule, SlugValue>
-}
+  slugValidationRules?: ValidationBuilder<SlugRule, SlugValue>;
+};
 
 /**
  * @public
@@ -71,7 +71,7 @@ export type PageTreeConfig = {
     documentLanguageShouldMatchParent?: boolean;
   };
   /** Define options that apply to all pages. Can be overridden by options supplied using definePageType */
-  globalOptions?: GlobalOptions
+  globalOptions?: GlobalOptions;
 };
 
 /**
