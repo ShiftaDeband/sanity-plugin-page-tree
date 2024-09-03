@@ -7,8 +7,6 @@ import { PageTreeConfig, GlobalOptions } from '../types';
 import { parentValidator } from '../validators/parent-validator';
 import { slugValidator } from '../validators/slug-validator';
 
-import { allowedParentValidator } from '../validators/parent-validator';
-
 type Options = GlobalOptions & {
   isRoot?: boolean;
 };
