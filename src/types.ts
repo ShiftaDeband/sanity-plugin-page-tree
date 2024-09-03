@@ -18,7 +18,7 @@ export type PageMetadata = {
 
 export type RawPageMetadata = {
   // For user customizable language/title fields
-  [key: string]: any;
+  [key: string]: unknown;
   _id: string;
   _type: string;
   _updatedAt: string;
@@ -32,8 +32,11 @@ export type RawPageMetadataWithPublishedState = RawPageMetadata & {
 };
 
 export type PageTreeItem = RawPageMetadataWithPublishedState & {
-  children?: PageTreeItem[];
   path: string;
+};
+
+export type NestedPageTreeItem = PageTreeItem & {
+  children: NestedPageTreeItem[];
 };
 
 export type GlobalOptions = {
@@ -64,6 +67,8 @@ export type PageTreeConfig = {
     supportedLanguages: string[];
     /** Optional field name of the language field, defaults to "language" */
     languageFieldName?: string;
+    /* Adds validation check to ensure that the language of the document matches the language of the parent document. Default: false */
+    documentLanguageShouldMatchParent?: boolean;
   };
   /** Define options that apply to all pages. Can be overridden by options supplied using definePageType */
   globalOptions?: GlobalOptions

@@ -1,6 +1,7 @@
-import { groupBy, isNil, omit, orderBy, sortBy } from 'lodash';
+import { groupBy, omit, orderBy, sortBy } from 'lodash';
 
 import {
+  NestedPageTreeItem,
   PageMetadata,
   PageTreeConfig,
   PageTreeItem,
@@ -8,15 +9,15 @@ import {
   RawPageMetadataWithPublishedState,
 } from '../types';
 import { getSanityDocumentId } from '../utils/sanity';
-import { getLanguageFromConfig } from './config';
+import { getLanguageFieldName, getRootPageSlug } from './config';
 
 export const DRAFTS_PREFIX = 'drafts.';
 
 /**
  * Maps array of raw page metadata objects to page metadata object array containing resolved id, path and type.
  */
-export const getAllPageMetadata = (config: PageTreeConfig, pagesInfo: RawPageMetadata[]): PageMetadata[] => {
-  const pageTree = mapRawPageMetadatasToPageTree(config, pagesInfo);
+export const getAllPageMetadata = (config: PageTreeConfig, pages: RawPageMetadata[]): PageMetadata[] => {
+  const pageTree = mapRawPageMetadatasToPageTree(config, pages);
   const flatPageTree = flatMapPageTree(pageTree);
 
   return flatPageTree.map(page => ({
@@ -30,7 +31,7 @@ export const getAllPageMetadata = (config: PageTreeConfig, pagesInfo: RawPageMet
 /**
  * Finds a page from an array of page tree items by the given page id.
  */
-export const findPageTreeItemById = (pages: PageTreeItem[], id: string): PageTreeItem | undefined => {
+export const findPageTreeItemById = (pages: NestedPageTreeItem[], id: string): NestedPageTreeItem | undefined => {
   for (const page of pages) {
     if (page._id === id) return page;
 
@@ -44,13 +45,16 @@ export const findPageTreeItemById = (pages: PageTreeItem[], id: string): PageTre
 /**
  * Maps pages to page tree containing recursive nested children.
  */
-export const mapRawPageMetadatasToPageTree = (config: PageTreeConfig, pages: RawPageMetadata[]): PageTreeItem[] => {
-  const pagesWithPublishedState = getPublishedAndDraftRawPageMetdadata(config, pages);
+export const mapRawPageMetadatasToPageTree = (
+  config: PageTreeConfig,
+  pages: RawPageMetadata[],
+): NestedPageTreeItem[] => {
+  const pagesWithPublishedState = getPublishedAndDraftRawPageMetadata(config, pages);
 
   const orderedPages = orderBy(mapPageTreeItems(config, pagesWithPublishedState), 'path');
   const { documentInternationalization } = config;
   if (documentInternationalization) {
-    const languageField = documentInternationalization.languageFieldName ?? 'language';
+    const languageField = getLanguageFieldName(config);
 
     return sortBy(orderedPages, p => {
       let index = documentInternationalization.supportedLanguages.indexOf((p[languageField] as string)?.toLowerCase());
@@ -66,8 +70,10 @@ export const mapRawPageMetadatasToPageTree = (config: PageTreeConfig, pages: Raw
 /**
  * Recursively flattens page tree to flat array of pages.
  */
-export const flatMapPageTree = (pages: PageTreeItem[]): Omit<PageTreeItem, 'children'>[] =>
-  pages.flatMap(page => (page.children ? [omit(page, 'children'), ...flatMapPageTree(page.children)] : page));
+export const flatMapPageTree = (pages: NestedPageTreeItem[]): PageTreeItem[] =>
+  pages.flatMap(page =>
+    page.children ? [omit(page, 'children') as PageTreeItem, ...flatMapPageTree(page.children)] : page,
+  );
 
 /**
  * Maps pages to page tree containing recursive nested children and pahts.
@@ -77,20 +83,19 @@ const mapPageTreeItems = (
   pagesWithPublishedState: RawPageMetadataWithPublishedState[],
   parentId?: string,
   parentPath: string = '',
-): PageTreeItem[] => {
+): NestedPageTreeItem[] => {
   const getChildPages = (parentId: string | undefined) =>
     pagesWithPublishedState.filter(page => page.parent?._ref === parentId);
 
   return getChildPages(parentId).map(page => {
-    const language = getLanguageFromConfig(config);
     const pagePath = parentPath
       ? `${parentPath === '/' ? '' : parentPath}/${page.slug?.current}`
-      : `/${language ? page[language] : ''}`;
+      : `/${getRootPageSlug(page, config) ?? ''}`;
     const children = orderBy(mapPageTreeItems(config, pagesWithPublishedState, page._id, pagePath), 'path');
 
     return {
       ...page,
-      ...(children.length ? { children } : {}),
+      children,
       path: pagePath,
     };
   });
@@ -99,7 +104,7 @@ const mapPageTreeItems = (
 /**
  * Provides draft and published status. Filters out duplicate pages with the same id and invalid pages.
  */
-const getPublishedAndDraftRawPageMetdadata = (
+const getPublishedAndDraftRawPageMetadata = (
   config: PageTreeConfig,
   pages: RawPageMetadata[],
 ): RawPageMetadataWithPublishedState[] => {
@@ -129,7 +134,7 @@ const getPublishedAndDraftRawPageMetdadata = (
 };
 
 const isValidPage = (config: PageTreeConfig, page: RawPageMetadata): boolean => {
-  if (page.parent === null || page.slug === null) {
+  if (!page.parent || !page.slug) {
     if (page._type !== config.rootSchemaType) {
       return false;
     }

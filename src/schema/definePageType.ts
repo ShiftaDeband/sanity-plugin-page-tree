@@ -1,12 +1,11 @@
-import { compact, get } from 'lodash';
+import { compact } from 'lodash';
 import { defineField, defineType, DocumentDefinition } from 'sanity';
 
 import { PageTreeField } from '../components/PageTreeField';
 import { SlugField } from '../components/SlugField';
 import { PageTreeConfig, GlobalOptions } from '../types';
+import { parentValidator } from '../validators/parent-validator';
 import { slugValidator } from '../validators/slug-validator';
-
-import { allowedParentValidator } from '../validators/parent-validator';
 
 type Options = GlobalOptions & {
   isRoot?: boolean;
@@ -70,7 +69,7 @@ const basePageFields = (config: PageTreeConfig, options: Options, ownType: Docum
           title: 'Parent page',
           type: 'reference',
           to: getPossibleParentsFromConfig(config, ownType).map(type => ({ type })),
-          validation: Rule => Rule.required().custom(allowedParentValidator(config, ownType.name)),
+          validation: Rule => Rule.required().custom(parentValidator(config, ownType.name)),
           group: options.fieldsGroupName,
           components: {
             field: props => PageTreeField({ ...props, config, mode: 'select-parent' }),
