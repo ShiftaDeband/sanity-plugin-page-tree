@@ -3,7 +3,7 @@ import { defineField, defineType, DocumentDefinition } from 'sanity';
 
 import { PageTreeField } from '../components/PageTreeField';
 import { SlugField } from '../components/SlugField';
-import { PageTreeConfig, GlobalOptions } from '../types';
+import { GlobalOptions, PageTreeConfig } from '../types';
 import { parentValidator } from '../validators/parent-validator';
 import { slugValidator } from '../validators/slug-validator';
 
@@ -23,8 +23,8 @@ export const definePageType = (
   config: PageTreeConfig,
   options: Options = { isRoot: false },
 ) => {
-  options = {...config.globalOptions, ...options};
-  const slugSourceFieldName = getSlugSourceField(config, options);
+  const optionsConfig = { ...config.globalOptions, ...options };
+  const slugSourceFieldName = getSlugSourceField(config, optionsConfig);
 
   let slugSourceField;
   let typeFields = type.fields;
@@ -36,7 +36,7 @@ export const definePageType = (
   return defineType({
     ...type,
     title: type.title,
-    fields: compact([slugSourceField, ...basePageFields(config, options, type), ...typeFields]),
+    fields: compact([slugSourceField, ...basePageFields(config, optionsConfig, type), ...typeFields]),
   });
 };
 
@@ -56,7 +56,7 @@ const basePageFields = (config: PageTreeConfig, options: Options, ownType: Docum
           },
           validation: Rule => [
             Rule.required().custom(slugValidator(config)),
-            ...toArray(options.slugValidationRules?.(Rule))
+            ...toArray(options.slugValidationRules?.(Rule)),
           ],
           group: options.fieldsGroupName,
         }),
@@ -80,4 +80,9 @@ const basePageFields = (config: PageTreeConfig, options: Options, ownType: Docum
 ];
 
 const getSlugSourceField = (config: PageTreeConfig, options: Options) => config.titleFieldName ?? options.slugSource;
-const toArray = <T>(t: undefined | T | T[]) => t === undefined ? [] : Array.isArray(t) ? t : [t];
+const toArray = <T>(t: undefined | T | T[]): T[] => {
+  if (t === undefined) {
+    return [];
+  }
+  return Array.isArray(t) ? t : [t];
+};
